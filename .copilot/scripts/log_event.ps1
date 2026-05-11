@@ -16,7 +16,7 @@ if (Test-Path $venvPython) {
 
 $scriptPath = Join-Path $repoRoot "hooks\log_event.py"
 if ($python -eq "py") {
-    & py -3 $scriptPath --client codex
+    & py -3 $scriptPath --client copilot
 } else {
-    & $python $scriptPath --client codex
+    & $python $scriptPath --client copilot
 }

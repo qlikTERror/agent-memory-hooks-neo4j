@@ -2,8 +2,8 @@
 """
 Shared hook script that logs events to Neo4j as a linked list per session.
 
-Used by both Claude Code (.claude/hooks/) and Codex (.codex/hooks/) — pass
---client to tag the originating tool. The hook payloads from the two clients
+Used by Claude Code (.claude/hooks/), Codex (.codex/hooks/), Cursor, and
+Copilot plugin wrappers — pass --client to tag the originating tool. The hook payloads from the two clients
 share almost all fields (session_id, hook_event_name, transcript_path, cwd,
 tool_name, tool_input, tool_response, prompt, model, source); Codex adds
 turn_id, tool_use_id, last_assistant_message, stop_hook_active.
@@ -123,7 +123,7 @@ def _append_event(tx, session_id: str, client: str, event_props: dict):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--client", required=True, choices=["claude_code", "codex", "cursor"])
+    parser.add_argument("--client", required=True, choices=["claude_code", "codex", "cursor", "copilot"])
     args = parser.parse_args()
 
     try:

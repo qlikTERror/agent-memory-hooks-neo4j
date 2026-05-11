@@ -8,6 +8,7 @@ import json
 import subprocess
 import os
 import time
+import sys
 
 from neo4j import GraphDatabase
 
@@ -20,7 +21,7 @@ HOOK_SCRIPT = os.path.join(os.path.dirname(__file__), "hooks", "log_event.py")
 
 def run_hook(event_data: dict, client: str = "claude_code"):
     result = subprocess.run(
-        ["python3", HOOK_SCRIPT, "--client", client],
+        [sys.executable, HOOK_SCRIPT, "--client", client],
         input=json.dumps(event_data),
         capture_output=True,
         text=True,
@@ -155,7 +156,7 @@ def test_inject_memory():
     # --- SessionStart: should return profile memories ---
     inject_script = os.path.join(os.path.dirname(__file__), "hooks", "inject_memory.py")
     result = subprocess.run(
-        ["python3", inject_script, "--client", "claude_code"],
+        [sys.executable, inject_script, "--client", "claude_code"],
         input=json.dumps({"hook_event_name": "SessionStart", "session_id": "test"}),
         capture_output=True,
         text=True,
@@ -168,7 +169,7 @@ def test_inject_memory():
 
     # --- UserPromptSubmit: fulltext search should find relevant memory ---
     result = subprocess.run(
-        ["python3", inject_script, "--client", "claude_code"],
+        [sys.executable, inject_script, "--client", "claude_code"],
         input=json.dumps({"hook_event_name": "UserPromptSubmit", "prompt": "how should we handle auth middleware"}),
         capture_output=True,
         text=True,
@@ -181,7 +182,7 @@ def test_inject_memory():
 
     # --- UserPromptSubmit: search for testing should find feedback ---
     result = subprocess.run(
-        ["python3", inject_script, "--client", "claude_code"],
+        [sys.executable, inject_script, "--client", "claude_code"],
         input=json.dumps({"hook_event_name": "UserPromptSubmit", "prompt": "integration tests and mocking"}),
         capture_output=True,
         text=True,

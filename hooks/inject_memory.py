@@ -6,7 +6,7 @@ Shared hook: inject :Memory nodes into the session as additional context.
 - UserPromptSubmit: fulltext search against memory content/path with an OR-term
   fallback when the initial query returns nothing.
 
-Used by both Claude Code and Codex. Both clients accept the same output shape:
+Used by Claude Code, Codex, Cursor, and Copilot plugin wrappers. All clients accept the same output shape:
   {"hookSpecificOutput": {"hookEventName": "...", "additionalContext": "..."}}
 
 Requires a fulltext index (create once):
@@ -112,7 +112,7 @@ def emit(event_name: str, context: str):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--client", required=True, choices=["claude_code", "codex", "cursor"])
+    parser.add_argument("--client", required=True, choices=["claude_code", "codex", "cursor", "copilot"])
     parser.parse_args()
 
     try:
