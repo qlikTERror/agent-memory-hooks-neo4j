@@ -1,0 +1,9 @@
+{
+  "name": "neo4j-memory-hooks",
+  "description": "Persist Copilot/Codex/Claude/Cursor session events to Neo4j and inject relevant memory into prompts.",
+  "version": "0.1.0",
+  "author": {
+    "name": "neo4j-memory"
+  },
+  "hooks": "hooks.json"
+}
