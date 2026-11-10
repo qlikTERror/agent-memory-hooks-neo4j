@@ -860,7 +860,7 @@ def main():
     ap.add_argument("--list-models", nargs="*", metavar="BACKEND",
                     help="list available models for given backends (or all if none specified) and exit")
     ap.add_argument("--dry-run", action="store_true", help="print memories, don't write")
-    ap.add_argument("--log-file", default=None, help="log file path (enables file logging)")
+    ap.add_argument("--log-file", default=None, help="log file path (enables file logging; paths in dream are redirected to logs/dream)")
     ap.add_argument("--log-max-mb", type=float, default=5.0, help="max log file size in MB before rotation")
     ap.add_argument("--log-keep-days", type=int, default=30, help="delete rotated logs older than N days")
     args = ap.parse_args()

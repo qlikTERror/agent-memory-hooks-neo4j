@@ -41,7 +41,7 @@ python dream.py --dry-run
 `dream_unified.py` supports ordered CLI/API backends, for example:
 
 ```powershell
-python dream\dream_unified.py --backend claude copilot --since 15d --log-file dream\dream.log
+python dream\dream_unified.py --backend claude copilot --since 15d --log-file logs\dream\dream.log
 ```
 
 Copilot is invoked through PowerShell using a `.ps1` shim only. Discovery
@@ -56,13 +56,27 @@ Logging starts before backend setup. Copilot discovery and MCP-disable
 setup run only when Copilot is actually needed, so an unavailable optional
 Copilot fallback does not prevent Claude from running. Backend failures
 are reported and the next backend is tried; if all fail, the run fails.
-With `--log-file dream\dream.log`, output and startup tracebacks are saved
-as `dream.YYYY-MM-DD.N.log` with the configured size and age limits.
+With `--log-file logs\dream\dream.log`, output and startup tracebacks are
+saved in the Git-ignored `logs\dream` directory as
+`dream.YYYY-MM-DD.N.log`. The directory is created automatically. Legacy
+paths directly inside the source `dream` directory (including the existing
+scheduled task's absolute `dream\dream.log` argument) are redirected to
+the repository's `logs\dream` directory. Explicit paths elsewhere are
+respected; omitting `--log-file` still logs only to the console.
+
+Logs rotate on date changes and when the active file has reached
+`--log-max-mb` (default 5 MB; checked before the next record, so a single
+record can exceed the limit). Logs older than `--log-keep-days` (default
+30 days) are removed on startup and rollover, including for short scheduled
+runs. A nonpositive size or retention value disables that limit.
+Existing logs can be moved from `dream` to `logs\dream` with their names
+intact, checking for destination collisions first; source code and other
+files should not be moved.
 
 Offline regression tests (no LLM calls or Neo4j writes):
 
 ```powershell
-python -m unittest discover -s dream -p test_dream_unified.py
+python -m unittest discover -s dream -p "test_dream*.py"
 ```
 
 A scheduled task pointing at another checkout continues to use that

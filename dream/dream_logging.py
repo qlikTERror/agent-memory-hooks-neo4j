@@ -12,7 +12,7 @@ Usage from any dream script:
     from dream_logging import setup_logging
 
     # In argparse:
-    ap.add_argument("--log-file", default="dream.log")
+    ap.add_argument("--log-file", default="logs/dream/dream.log")
     ap.add_argument("--log-max-mb", type=float, default=5.0)
     ap.add_argument("--log-keep-days", type=int, default=30)
 
@@ -31,12 +31,22 @@ import logging
 import os
 import re
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from logging.handlers import BaseRotatingHandler
 
 
 LOG_FORMAT = "%(asctime)s %(message)s"
 LOG_DATEFMT = "%Y-%m-%dT%H:%M:%S"
+
+
+def _resolve_log_path(log_file: str) -> str:
+    """Keep legacy log paths in the source directory out of that directory."""
+    path = os.path.abspath(log_file)
+    source_dir = os.path.dirname(os.path.abspath(__file__))
+    if os.path.normcase(os.path.dirname(path)) == os.path.normcase(source_dir):
+        return os.path.join(os.path.dirname(source_dir), "logs", "dream",
+                            os.path.basename(path))
+    return path
 
 
 class DreamFileHandler(BaseRotatingHandler):
@@ -47,12 +57,13 @@ class DreamFileHandler(BaseRotatingHandler):
 
     When the file exceeds *maxBytes*, a new sequence number is started.
     When the date changes, the sequence resets to 0.
-    Old files beyond *keepDays* are deleted on each rollover.
+    Old files beyond *keepDays* are deleted at startup and on each rollover.
     """
 
     def __init__(self, base_path: str, maxBytes: int = 5 * 1024 * 1024,
                  keepDays: int = 30, encoding: str = "utf-8"):
         self._base_dir = os.path.dirname(os.path.abspath(base_path)) or "."
+        os.makedirs(self._base_dir, exist_ok=True)
         stem = os.path.splitext(os.path.basename(base_path))[0]
         self._stem = stem
         self._maxBytes = maxBytes
@@ -63,6 +74,7 @@ class DreamFileHandler(BaseRotatingHandler):
 
         filename = self._make_filename(self._today, self._seq)
         super().__init__(filename, mode="a", encoding=encoding)
+        self._purge_old()
 
     def _make_filename(self, date_str: str, seq: int) -> str:
         return os.path.join(self._base_dir, f"{self._stem}.{date_str}.{seq}.log")
@@ -120,8 +132,10 @@ class DreamFileHandler(BaseRotatingHandler):
             if m and m.group(1) < cutoff:
                 try:
                     os.remove(path)
-                except OSError:
-                    pass
+                except OSError as exc:
+                    logging.getLogger("dream").warning(
+                        "Could not remove expired dream log %s: %s", path, exc
+                    )
 
 
 class _StreamToLogger:
@@ -176,7 +190,8 @@ def setup_logging(
 
     # File handler — if log_file is specified.
     if log_file:
-        fh = DreamFileHandler(log_file, maxBytes=max_bytes, keepDays=keep_days)
+        fh = DreamFileHandler(_resolve_log_path(log_file),
+                              maxBytes=max_bytes, keepDays=keep_days)
         fh.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=LOG_DATEFMT))
         logger.addHandler(fh)
 
