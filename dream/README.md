@@ -36,6 +36,39 @@ python dream.py --since 24h
 python dream.py --dry-run
 ```
 
+## Unified CLI backends on Windows
+
+`dream_unified.py` supports ordered CLI/API backends, for example:
+
+```powershell
+python dream\dream_unified.py --backend claude copilot --since 15d --log-file dream\dream.log
+```
+
+Copilot is invoked through PowerShell using a `.ps1` shim only. Discovery
+checks `COPILOT_BIN` first, then searches `PATH` directly for `copilot.ps1`,
+then checks VS Code's Copilot CLI storage under `APPDATA`. Python's
+`shutil.which` can miss a `.ps1` file on Windows when `.PS1` is absent from
+`PATHEXT`, even though PowerShell's `Get-Command` finds it. No global
+`PATHEXT` change is required. To override discovery, set `COPILOT_BIN` to
+the full `.ps1` path; `.cmd` and `.bat` shims are not supported.
+
+Logging starts before backend setup. Copilot discovery and MCP-disable
+setup run only when Copilot is actually needed, so an unavailable optional
+Copilot fallback does not prevent Claude from running. Backend failures
+are reported and the next backend is tried; if all fail, the run fails.
+With `--log-file dream\dream.log`, output and startup tracebacks are saved
+as `dream.YYYY-MM-DD.N.log` with the configured size and age limits.
+
+Offline regression tests (no LLM calls or Neo4j writes):
+
+```powershell
+python -m unittest discover -s dream -p test_dream_unified.py
+```
+
+A scheduled task pointing at another checkout continues to use that
+checkout's files. Deploy the updated sources there after reviewing the
+change; fixing an isolated worktree does not update the live task.
+
 ## Schema
 
 Memories imitate markdown files — each `:Memory` node has a `path` and a
