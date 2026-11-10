@@ -26,6 +26,11 @@ NEO4J_PASSWORD = os.environ.get("HOOKS_NEO4J_PASSWORD", "password")
 
 
 MAX_RESPONSE_CHARS = 4000
+DISABLE_HOOKS_ENV = "AGENT_MEMORY_DISABLE_HOOKS"
+
+
+def _hooks_disabled() -> bool:
+    return os.environ.get(DISABLE_HOOKS_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def get_driver():
@@ -125,6 +130,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--client", required=True, choices=["claude_code", "codex", "cursor", "copilot"])
     args = parser.parse_args()
+
+    if _hooks_disabled():
+        return
 
     try:
         raw = sys.stdin.read()

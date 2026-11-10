@@ -28,6 +28,7 @@ NEO4J_PASSWORD = os.environ.get("HOOKS_NEO4J_PASSWORD", "password")
 
 MAX_PROMPT_HITS = 5
 MIN_FULLTEXT_SCORE = 0.5
+DISABLE_HOOKS_ENV = "AGENT_MEMORY_DISABLE_HOOKS"
 
 STOPWORDS = {
     "this", "that", "with", "from", "have", "what", "when", "where", "which",
@@ -40,6 +41,10 @@ STOPWORDS = {
 
 def get_driver():
     return GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD))
+
+
+def _hooks_disabled() -> bool:
+    return os.environ.get(DISABLE_HOOKS_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _fulltext_search(session, query: str, limit: int = MAX_PROMPT_HITS) -> list:
@@ -114,6 +119,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--client", required=True, choices=["claude_code", "codex", "cursor", "copilot"])
     parser.parse_args()
+
+    if _hooks_disabled():
+        return
 
     try:
         raw = sys.stdin.read()
